@@ -82,6 +82,7 @@ np.save('data_img',data)
 np.save('target',new_target)
 data=np.load('data_img.npy')
 target=np.load('target.npy')
+
 from sklearn.model_selection import train_test_split
 train_data,test_data,train_target,test_target=train_test_split(data,new_target,test_size=0.2)
 from keras.models import Sequential
@@ -90,6 +91,7 @@ from keras.layers import MaxPooling2D
 from keras.layers import Flatten
 from keras.layers import Dense , Dropout
 import os
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 sz = 128
 # Step 1 - Building the CNN

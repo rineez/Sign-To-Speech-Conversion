@@ -3,3 +3,7 @@ tensorflow==2.12.0
 opencv-contrib-python
 gTTS
 playsound
+
+# Additional dependencies for training the model
+scikit-learn
+matplotlib
