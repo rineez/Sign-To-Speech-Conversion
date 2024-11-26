@@ -1,9 +1,5 @@
-keras
-tensorflow
+# Recommended Python version is 3.9
+tensorflow==2.12.0
+opencv-contrib-python
 gTTS
 playsound
-numpy
-sklearn
-matplotlib
-os
-ModelCheckpoint
