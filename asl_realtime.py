@@ -4,7 +4,6 @@ from keras.utils import load_img, img_to_array
 import numpy as np
 import tensorflow as tf
 import keras
-from playsound import playsound
 
 model = keras.models.load_model("asl_classifier.h5")
 
@@ -92,14 +91,10 @@ source.release()
 
 cv2.destroyAllWindows()
 
-from gtts import gTTS 
-  
-# This module is imported so that we can  
-# play the converted audio 
-import os 
-  
-# The text that you want to convert to audio 
-  
+from gtts import gTTS
+import os
+from playsound import playsound
+
 # Language in which you want to convert 
 language = 'en'
 # Passing the text and language to the engine,  
@@ -111,4 +106,5 @@ tts = gTTS(text=string, lang=language, slow=False)
 # Saving the converted audio in a mp3 file tts_out.mp3 
 sound_file='tts_out.mp3'
 tts.save(sound_file)
+
 playsound(sound_file)

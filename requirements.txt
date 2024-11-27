@@ -2,7 +2,7 @@
 tensorflow==2.12.0
 opencv-contrib-python
 gTTS
-playsound
+playsound==1.2.2
 
 # Additional dependencies for training the model
 scikit-learn
