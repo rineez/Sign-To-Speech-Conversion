@@ -80,11 +80,11 @@ while(True):
     cv2.putText(img, string, (275, 50),cv2.FONT_HERSHEY_SIMPLEX,0.8,(200,200,200),2)
     cv2.imshow("Gray",res)    
     cv2.imshow('LIVE',img)
-    key=cv2.waitKey(1)
     
- 
+    key=cv2.waitKey(1)
     if(key==27):#press Esc. to exit
         break
+
 print(string)        
 cv2.destroyAllWindows()
 source.release()
@@ -92,7 +92,6 @@ source.release()
 cv2.destroyAllWindows()
 
 from gtts import gTTS
-import os
 from playsound import playsound
 
 # Language in which you want to convert 
