@@ -1,3 +1,4 @@
+import os
 from keras.models import load_model
 from keras.utils import load_img, img_to_array
 import cv2
@@ -103,7 +104,7 @@ language = 'en'
 tts = gTTS(text=string, lang=language, slow=False) 
   
 # Saving the converted audio in a mp3 file tts_out.mp3 
-sound_file='tts_out.mp3'
+sound_file = os.path.join('out','tts_out.mp3')
 tts.save(sound_file)
 
 playsound(sound_file)
