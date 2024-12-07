@@ -9,7 +9,7 @@ label_dict=dict(zip(categories,labels)) #empty dictionary
 print(label_dict)
 print(categories)
 print(labels)
-data_path='DATASET/train'
+data_path='DATASET'
 classes_path=os.listdir(data_path)
 classesf=os.listdir(data_path)
 print(classesf)
@@ -90,6 +90,7 @@ from keras.layers import Convolution2D
 from keras.layers import MaxPooling2D
 from keras.layers import Flatten
 from keras.layers import Dense , Dropout
+import matplotlib.pyplot as plt
 import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"

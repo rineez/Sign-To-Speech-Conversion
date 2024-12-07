@@ -1,8 +1,7 @@
 # Recommended Python version is 3.9
-tensorflow==2.12.0
+tensorflow
 opencv-contrib-python
-gTTS
-playsound==1.2.2
+gtts
 
 # Additional dependencies for training the model
 scikit-learn

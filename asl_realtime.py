@@ -1,12 +1,12 @@
 import os
-from keras.models import load_model
-from keras.utils import load_img, img_to_array
+from tensorflow.keras.models import load_model
+from tensorflow.keras.utils import load_img, img_to_array
 import cv2
 import numpy as np
 import tensorflow as tf
 import keras
 
-model = keras.models.load_model("asl_classifier.h5")
+model = keras.models.load_model("asl_classifier.keras")
 
 labels_dict = {0:'0', 
                  1:'A', 
@@ -52,8 +52,8 @@ while(True):
     ret,img=source.read()
     gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     #cv2.rectangle(img,(x,y),(x+w,y+h),color_dict,2)
-    cv2.rectangle(img,(24,24),(250 , 250),color_dict,2)
-    crop_img=gray[24:250,24:250]
+    cv2.rectangle(img,(24,24),(310 , 310),color_dict,2)
+    crop_img=gray[24:310,24:310]
     count = count + 1
     if(count % 100 == 0):
         prev_val = count
@@ -65,35 +65,31 @@ while(True):
     normalized=resized/255.0
     reshaped=np.reshape(normalized,(1,img_size,img_size,1))
     result = model.predict(reshaped)
-    #print(result)
-    label=np.argmax(result,axis=1)[0]
-    if(count == 300):
-        count = 99
-        prev= labels_dict[label] 
-        if(label == 0):
-               string = string + " "
+    print("Predicted label: ", result)
+    print("ArgMax=", np.argmax(result,axis=1))
+    label=np.argmax(result, axis=1)[0]
+    prev = labels_dict[label] 
+    if(label != 0):
+            string = string + prev
             #if(len(string)==1 or string[len(string)] != " "):
-             
-        else:
-                string = string + prev
     
     cv2.putText(img, prev, (24, 14),cv2.FONT_HERSHEY_SIMPLEX,0.8,(255,255,255),2) 
     cv2.putText(img, string, (275, 50),cv2.FONT_HERSHEY_SIMPLEX,0.8,(200,200,200),2)
-    cv2.imshow("Gray",res)    
+    cv2.imshow("Preprocessed",res)    
     cv2.imshow('LIVE',img)
     
-    key=cv2.waitKey(1)
+    key=cv2.waitKey(10)
     if(key==27):#press Esc. to exit
         break
 
-print(string)        
+print(string)
 cv2.destroyAllWindows()
 source.release()
 
 cv2.destroyAllWindows()
 
 from gtts import gTTS
-from playsound import playsound
+from IPython.display import Audio
 
 # Language in which you want to convert 
 language = 'en'
@@ -107,4 +103,4 @@ tts = gTTS(text=string, lang=language, slow=False)
 sound_file = os.path.join('out','tts_out.mp3')
 tts.save(sound_file)
 
-playsound(sound_file)
+Audio(sound_file,autoplay=True)
