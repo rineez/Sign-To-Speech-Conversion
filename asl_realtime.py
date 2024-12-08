@@ -1,6 +1,6 @@
 import os
-from tensorflow.keras.models import load_model
-from tensorflow.keras.utils import load_img, img_to_array
+from tensorflow.keras.models import load_model # type: ignore
+from tensorflow.keras.utils import load_img, img_to_array # type: ignore
 import cv2
 import numpy as np
 import tensorflow as tf
@@ -8,34 +8,10 @@ import keras
 
 model = keras.models.load_model("asl_classifier.keras")
 
-labels_dict = {0:'0', 
-                 1:'A', 
-                 2:'B', 
-                 3:'C', 
-                 4:'D', 
-                 5:'E',
-                 6:'F',
-                 7:'G',
-                 8:'H',
-                 9:'I',
-                 10:'J',
-                 11:'K',
-                 12:'L',
-                 13:'M',
-                 14:'N',
-                 15:'O',
-                 16:'P',
-                 17:"Q",
-                 18:'R',
-                 19:'S',
-                 20:'T', 
-                 21:'U', 
-                 22:'V',
-                 23:'W',
-                 24:'X',
-                 25:'Y',
-                 26:'Z'}
-color_dict=(0,255,0)
+LABEL_CLASS_MAP = { 0:'', 1:'A', 2:'B', 3:'C', 4:'D', 5:'E', 6:'F', 7:'G', 8:'H', 9:'I',10:'J',
+                11:'K', 12:'L', 13:'M', 14:'N', 15:'O', 16:'P', 17:"Q", 18:'R', 19:'S', 20:'T',
+                21:'U', 22:'V', 23:'W', 24:'X', 25:'Y', 26:'Z' }
+COLOR_GREEN=(0,255,0)
 x=0
 y=0
 w=128
@@ -52,7 +28,7 @@ while(True):
     ret,img=source.read()
     gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     #cv2.rectangle(img,(x,y),(x+w,y+h),color_dict,2)
-    cv2.rectangle(img,(24,24),(310 , 310),color_dict,2)
+    cv2.rectangle(img,(24,24),(310 , 310),COLOR_GREEN,2)
     crop_img=gray[24:310,24:310]
     count = count + 1
     if(count % 100 == 0):
@@ -68,7 +44,7 @@ while(True):
     print("Predicted label: ", result)
     print("ArgMax=", np.argmax(result,axis=1))
     label=np.argmax(result, axis=1)[0]
-    prev = labels_dict[label] 
+    prev = LABEL_CLASS_MAP[label] 
     if(label != 0):
             string = string + prev
             #if(len(string)==1 or string[len(string)] != " "):
