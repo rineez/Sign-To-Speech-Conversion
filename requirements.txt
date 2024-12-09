@@ -1,8 +1,13 @@
-# Recommended Python version is 3.9
+# Recommended Python version is 3.11
 tensorflow
 opencv-contrib-python
-gtts
 
-# Additional dependencies for training the model
+# For training the model
 scikit-learn
+mediapipe==0.10.9 
 matplotlib
+
+# For Text to speech
+gtts
+pyttsx3
+pygame
