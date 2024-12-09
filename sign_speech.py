@@ -1,47 +1,75 @@
+from time import sleep
 import tkinter as tk
-from tkinter import ttk, messagebox
 import cv2
-import os
+import io
+import pygame
 import numpy as np
-from keras.models import load_model  # For gesture recognition
-from PIL import Image, ImageTk
-from gtts import gTTS
 import pyttsx3
+from tkinter import ttk, messagebox
+from tensorflow.keras.models import load_model  # For gesture recognition
+from gtts import gTTS
+
+from segmentation import segment_hand
+
+INPUT_SIZE = 128
+
+# Initialize pygame mixer for audio playback
+pygame.mixer.init()
 
 # Load pre-trained gesture recognition model (you need a model trained for sign language)
-# MODEL_PATH = "gesture_model.h5"  # Replace with your model path
-# gesture_model = load_model(MODEL_PATH)
+DEFAULT_MODEL_PATH = 'asl_classifier.keras'
+gesture_model = load_model(DEFAULT_MODEL_PATH)
 
-# Gesture labels corresponding to the model's output
-gesture_labels = {0: "Hello", 1: "Thanks", 2: "Yes", 3: "No", 4: "Help"}  # Add more labels as needed
+# Gesture labels corresponding to the model's output - Add more labels as needed
+gesture_labels = {0: "", 1: "Hello", 2: "Thanks", 3: "Yes", 4: "No", 5: "Help"}
 
 # Pyttsx3 engine for text-to-speech support
-engine = pyttsx3.init()
+tts_engine = pyttsx3.init()
 
 # Function to capture webcam frames and process gestures
 def recognize_sign_language():
-    cap = cv2.VideoCapture(0)
+    source = cv2.VideoCapture(0)
+    visual_threshold = 70
+    gaussian_window = 11
+    fine_tune_c = 2
     recognized_text = ""
 
-    if not cap.isOpened():
+    if not source.isOpened():
         messagebox.showerror("Error", "Unable to access webcam.")
         return recognized_text
+    
+    ret,frame = source.read()
+    img_h, img_w = frame.shape[:2]
 
-    messagebox.showinfo("Info", "Press 'q' to stop recognition.")
-    while True:
-        ret, frame = cap.read()
+    while(True):
+        ret, frame = source.read()
         if not ret:
             break
 
         # Preprocess frame for gesture model
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        resized_frame = cv2.resize(frame_rgb, (224, 224))  # Assuming 224x224 input size for the model
-        input_data = np.expand_dims(resized_frame / 255.0, axis=0)
+        crop_img = segment_hand(frame)
+        if crop_img is not None:
+            # Clean up the image data for training
+            crop_gray = cv2.cvtColor(crop_img,cv2.COLOR_BGR2GRAY)
+            blur = cv2.GaussianBlur(crop_gray,(5,5),2)
+            th3 = cv2.adaptiveThreshold(blur,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY_INV,gaussian_window,fine_tune_c)
+            ret, preprocessed = cv2.threshold(th3, visual_threshold, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)            
+            cv2.imshow("Preprocessed",preprocessed)
 
-        # Predict gesture
-        prediction = 0 # gesture_model.predict(input_data)
-        gesture_index = np.argmax(prediction)
-        recognized_text = gesture_labels.get(gesture_index, "Unknown Gesture")
+            resized = cv2.resize(preprocessed,(INPUT_SIZE,INPUT_SIZE))
+            normalized = resized/255.0
+            reshaped = np.reshape(normalized,(1,INPUT_SIZE,INPUT_SIZE,1))
+            # Predict gesture
+            predictions = gesture_model.predict(reshaped)
+            # Find prediction with the highest probability
+            gesture_index = np.argmax(predictions)
+            recognized_text = gesture_labels.get(gesture_index, "")
+            if recognized_text:
+                input_text.insert("end", recognized_text + " ")
+                selected_language = language_var.get()
+
+                language_code = languages[selected_language]
+                convert_text_to_audio(recognized_text, language_code)
 
         # Display frame with the recognized gesture
         cv2.putText(frame, recognized_text, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
@@ -51,7 +79,7 @@ def recognize_sign_language():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    cap.release()
+    source.release()
     cv2.destroyAllWindows()
     return recognized_text
 
@@ -59,33 +87,31 @@ def recognize_sign_language():
 def convert_text_to_audio(text, language):
     try:
         if language == "ml":  # Use pyttsx3 for Malayalam
-            engine.setProperty("voice", "com.apple.speech.synthesis.voice.malayalam")
-            engine.say(text)
-            engine.runAndWait()
+            tts_engine.setProperty("voice", "com.apple.speech.synthesis.voice.malayalam")
+            tts_engine.say(text)
+            tts_engine.runAndWait()
         else:  # Use gTTS for other languages
             tts = gTTS(text, lang=language)
-            filename = "output_audio.mp3"
-            tts.save(filename)
-            os.system(f"start {filename}")
+            speech_buffer = io.BytesIO()
+            tts.write_to_fp(speech_buffer)
+            speech_buffer.seek(0)  # Reset buffer pointer to the beginning
+            # Load and play the speech using pygame
+            pygame.mixer.music.load(speech_buffer, 'mp3')
+            pygame.mixer.music.play()
+            # Keep the script alive until the speech finishes playing
+            while pygame.mixer.music.get_busy():
+                continue
     except Exception as e:
         messagebox.showerror("Error", f"Audio generation failed: {e}")
 
 # Function to handle sign language conversion
 def handle_sign_language_conversion():
-    recognized_text = recognize_sign_language()
-    if recognized_text:
-        input_text.delete("1.0", "end")
-        input_text.insert("1.0", recognized_text)
-        selected_language = language_var.get()
+    selected_language = language_var.get()
+    if not selected_language:
+        messagebox.showwarning("Language Error", "Please select a language.")
+        return
+    recognize_sign_language()
 
-        if not selected_language:
-            messagebox.showwarning("Language Error", "Please select a language.")
-            return
-
-        convert_text_to_audio(recognized_text, selected_language)
-        messagebox.showinfo("Success", f"Recognized Gesture: {recognized_text}")
-    else:
-        messagebox.showwarning("Error", "No gesture recognized!")
 
 # Main Tkinter window
 root = tk.Tk()
@@ -119,6 +145,7 @@ language_var = tk.StringVar()
 language_dropdown = ttk.Combobox(frame, textvariable=language_var, state="readonly", width=30)
 language_dropdown['values'] = list(languages.keys())
 language_dropdown.grid(row=2, column=1, sticky="e")
+language_dropdown.set("English")
 
 # Buttons
 sign_language_button = ttk.Button(frame, text="Convert Sign Language to Audio", command=handle_sign_language_conversion)

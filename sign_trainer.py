@@ -150,7 +150,6 @@ def trainModel():
     dataset = np.reshape(dataset, (dataset.shape[0],INPUT_SIZE,INPUT_SIZE,1))
     target_labels_np = np.array(target_labels)
     encoded_targets = to_categorical(target_labels_np)
-
     
     train_data,test_data,train_target,test_target=train_test_split(dataset,encoded_targets,test_size=0.2)
     
@@ -238,9 +237,10 @@ def main():
     gaussian_window = 11
     fine_tune_c = 2
 
-    ret,live_img = source.read()
-    if live_img is None:
-            raise Exception("Unable to open Camera. Please check any other application is using camera.")
+    if not source.isOpened():
+        raise Exception("Unable to open Camera. Please check any other application is using camera.")
+
+    ret,live_img = source.read()            
 
     img_h, img_w = live_img.shape[:2]
     while(True):
