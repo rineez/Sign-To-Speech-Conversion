@@ -8,6 +8,7 @@ import pyttsx3
 from tkinter import ttk, messagebox
 from tensorflow.keras.models import load_model  # For gesture recognition
 from gtts import gTTS
+from translate import Translator  # For translation support
 
 from segmentation import segment_hand
 
@@ -38,10 +39,10 @@ def recognize_sign_language():
         messagebox.showerror("Error", "Unable to access webcam.")
         return recognized_text
     
-    ret,frame = source.read()
+    ret, frame = source.read()
     img_h, img_w = frame.shape[:2]
 
-    while(True):
+    while True:
         ret, frame = source.read()
         if not ret:
             break
@@ -50,26 +51,29 @@ def recognize_sign_language():
         crop_img = segment_hand(frame)
         if crop_img is not None:
             # Clean up the image data for training
-            crop_gray = cv2.cvtColor(crop_img,cv2.COLOR_BGR2GRAY)
-            blur = cv2.GaussianBlur(crop_gray,(5,5),2)
-            th3 = cv2.adaptiveThreshold(blur,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY_INV,gaussian_window,fine_tune_c)
-            ret, preprocessed = cv2.threshold(th3, visual_threshold, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)            
-            cv2.imshow("Preprocessed",preprocessed)
+            crop_gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
+            blur = cv2.GaussianBlur(crop_gray, (5, 5), 2)
+            th3 = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, gaussian_window, fine_tune_c)
+            ret, preprocessed = cv2.threshold(th3, visual_threshold, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+            cv2.imshow("Preprocessed", preprocessed)
 
-            resized = cv2.resize(preprocessed,(INPUT_SIZE,INPUT_SIZE))
-            normalized = resized/255.0
-            reshaped = np.reshape(normalized,(1,INPUT_SIZE,INPUT_SIZE,1))
+            resized = cv2.resize(preprocessed, (INPUT_SIZE, INPUT_SIZE))
+            normalized = resized / 255.0
+            reshaped = np.reshape(normalized, (1, INPUT_SIZE, INPUT_SIZE, 1))
+
             # Predict gesture
             predictions = gesture_model.predict(reshaped)
-            # Find prediction with the highest probability
             gesture_index = np.argmax(predictions)
             recognized_text = gesture_labels.get(gesture_index, "")
+
             if recognized_text:
                 input_text.insert("end", recognized_text + " ")
                 selected_language = language_var.get()
-
                 language_code = languages[selected_language]
-                convert_text_to_audio(recognized_text, language_code)
+                
+                # Translate the recognized text
+                translated_text = translate_text(recognized_text, language_code)
+                convert_text_to_audio(translated_text, language_code)
 
         # Display frame with the recognized gesture
         cv2.putText(frame, recognized_text, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
@@ -94,15 +98,23 @@ def convert_text_to_audio(text, language):
             tts = gTTS(text, lang=language)
             speech_buffer = io.BytesIO()
             tts.write_to_fp(speech_buffer)
-            speech_buffer.seek(0)  # Reset buffer pointer to the beginning
-            # Load and play the speech using pygame
+            speech_buffer.seek(0)
             pygame.mixer.music.load(speech_buffer, 'mp3')
             pygame.mixer.music.play()
-            # Keep the script alive until the speech finishes playing
             while pygame.mixer.music.get_busy():
                 continue
     except Exception as e:
         messagebox.showerror("Error", f"Audio generation failed: {e}")
+
+# Function to translate text using the translate library
+def translate_text(text, target_language):
+    try:
+        translator = Translator(to_lang=target_language)
+        translated = translator.translate(text)
+        return translated
+    except Exception as e:
+        messagebox.showerror("Error", f"Translation failed: {e}")
+        return text
 
 # Function to handle sign language conversion
 def handle_sign_language_conversion():
@@ -111,7 +123,6 @@ def handle_sign_language_conversion():
         messagebox.showwarning("Language Error", "Please select a language.")
         return
     recognize_sign_language()
-
 
 # Main Tkinter window
 root = tk.Tk()

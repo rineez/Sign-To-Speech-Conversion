@@ -9,7 +9,7 @@ from segmentation import segment_hand
 
 DEFAULT_DATASET_PATH = 'sign_dataset.ds'
 DEFAULT_MODEL_PATH = 'asl_classifier.keras'
-LABEL_CLASS_MAP = { 0:'', 1:'A', 2:'B', 3:'C', 4:'D', 5:'E', 6:'F', 7:'G', 8:'H', 9:'I',10:'J',
+LABEL_CLASS_MAP = { 0:'', 1:'Hi', 2:'Namaste', 3:'C', 4:'D', 5:'E', 6:'F', 7:'G', 8:'H', 9:'I',10:'J',
                 11:'K', 12:'L', 13:'M', 14:'N', 15:'O', 16:'P', 17:"Q", 18:'R', 19:'S', 20:'T',
                 21:'U', 22:'V', 23:'W', 24:'X', 25:'Y', 26:'Z' }
 X = 0
@@ -258,7 +258,7 @@ def main():
             blur = cv2.GaussianBlur(crop_gray,(5,5),2)
             th3 = cv2.adaptiveThreshold(blur,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY_INV,gaussian_window,fine_tune_c)
             ret, preprocessed = cv2.threshold(th3, visual_threshold, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)            
-            cv2.imshow("Preprocessed",preprocessed)
+            cv2.imshow("Preprocessed", preprocessed)
         # else:
         #     print("No hand detected.")
 
